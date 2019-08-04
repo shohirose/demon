@@ -8,7 +8,7 @@
 #define p ((N-q)/2)
 #define DEFAULT_INPUT 0.0
 
-//scale‚Í‚·‚×‚Äcm
+//scaleã¯ã™ã¹ã¦cm
 double a = 0.01;//radius of disk
 double V0 = 0.5;
 double e = 0.95,e_wall = 1.0;
@@ -17,7 +17,7 @@ int N_cell_x = 64,N_cell_y = 12;
 double Xmin = -3.2,Xmax = 3.2,X0 = 0.0;
 double Ymin = 0.0,Ymax = 1.0;
 double ell = 0.05;
-double U = 0.149;//” ‚Ì‰^“®‚ğŒˆ‚ß‚éƒpƒ‰ƒ[ƒ^
+double U = 0.149;//ç®±ã®é‹å‹•ã‚’æ±ºã‚ã‚‹ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 double T = 3000.0;
 double T_demon = 0.0;
 double epsilon = 0.000001;
@@ -44,14 +44,14 @@ struct PARTICLE_CELL{
 	int last;
 };
 
-int getcell_x(double x,double cell_length_x);//ell‚Ícell_length‚Ì‚±‚Æ
+int getcell_x(double x,double cell_length_x);//ellã¯cell_lengthã®ã“ã¨
 int getcell_y(double y,double cell_length_y);
 void initialize(struct PARTICLE_CELL particle_cells[N_cell_x+1][N_cell_y+1],int nextof[N]);
 
 void status_initialize(double x[N],double y[N],double u[N],double v[N],double tau[N],int C[N]);
 double distance(double x1,double y1,double x2,double y2);
 double Uniform(void);
-int set(double x[N],double y[N],int i);//set‚É¬Œ÷‚µ‚Ä‚¢‚ê‚Î1,¸”s‚µ‚Ä‚¢‚ê‚Î0‚ğ•Ô‚·
+int set(double x[N],double y[N],int i);//setã«æˆåŠŸã—ã¦ã„ã‚Œã°1,å¤±æ•—ã—ã¦ã„ã‚Œã°0ã‚’è¿”ã™
 double rand_normal( double mu, double sigma );
 int intpow(int a,int b);
 void CBT_initialize(Node *entry[n+1][2*p+2*q],struct event L[N]);
@@ -73,8 +73,8 @@ int main(int argc,char* argv[]){
 	
 	double x[N],y[N];
 	double u[N],v[N];
-	double tau[N];//—±q‚ÌŒÅ—LŠÔ‚ğ‹L˜^A,DelayedStateAlgorithm(DSA)‚É‚æ‚é‚‘¬‰»‚Ì‚½‚ß‚É•K—v
-	int C[N];//—±q‚Ì‚±‚ê‚Ü‚Å‚ÌÕ“Ë‰ñ”‚ğ‹L˜^Aevent‚ªinvalid‚©”»’è‚·‚é‚½‚ß‚É•K—v
+	double tau[N];//ç²’å­ã®å›ºæœ‰æ™‚é–“ã‚’è¨˜éŒ²ã€,DelayedStateAlgorithm(DSA)ã«ã‚ˆã‚‹é«˜é€ŸåŒ–ã®ãŸã‚ã«å¿…è¦
+	int C[N];//ç²’å­ã®ã“ã‚Œã¾ã§ã®è¡çªå›æ•°ã‚’è¨˜éŒ²ã€eventãŒinvalidã‹åˆ¤å®šã™ã‚‹ãŸã‚ã«å¿…è¦
 	double t=0.0,dt=0.01,trec_start = T*0.5,trec=trec_start,dtrec = (double)T/10000.0,t0,t_old;
 	double t_print=0.0,dt_print = T/100.0;
 	double t_cell=0.0,dt_cell,t_cell_old;
@@ -117,14 +117,14 @@ int main(int argc,char* argv[]){
 	while(counter <= counter_end){
 		printf("h=%lf (%d times)\n",h,counter);
 		initialize(particle_cells,nextof);
-		//‰ŠúğŒ‚Ìİ’è
+		//åˆæœŸæ¡ä»¶ã®è¨­å®š
 		t_old = 0.0;
 		t_cell = 0.0;
 		t = 0.0;
-		//‰ŠúğŒ‚Ìİ’è
+		//åˆæœŸæ¡ä»¶ã®è¨­å®š
 		status_initialize(x,y,u,v,tau,C);
 		for(i=0;i<N;i++){
-			//ƒZƒ‹‚Ö‚Ì“o˜^
+			//ã‚»ãƒ«ã¸ã®ç™»éŒ²
 			cell_x = getcell_x(x[i],cell_length_x);
 			cell_y = getcell_y(y[i],cell_length_y);
 			
@@ -148,20 +148,20 @@ int main(int argc,char* argv[]){
 		}
 		
 		CBT_initialize(entry,L);
-		//”½Ë‚Æinitialize_LM‚Í•K—v,update_schedule‚Íwhile‚Ì’†‚Å
+		//åå°„ã¨initialize_LMã¯å¿…è¦,update_scheduleã¯whileã®ä¸­ã§
 		printf("set up ok\n");
 		trec = trec_start;
 		m = 0.0;
 		t_old = t;
 		t_print = dt_print;
 		
-		//ŠÔ”­“W
+		//æ™‚é–“ç™ºå±•
 		while(t<=T){
 			if(t > t_print){
 				printf("t = %lf:m = %lf\n",t,m_cal(x));
 				t_print += dt_print;
 			}
-			//NEXT EVENT‚ÌŒŸõ
+			//NEXT EVENTã®æ¤œç´¢
 			i_current = entry[0][0]->number;
 			j_current = L[i_current].number_particle;
 			
@@ -200,8 +200,8 @@ int main(int argc,char* argv[]){
 				//fprintf(fp_check,"i=%d:%lf %lf %lf %lf,%lf %d\n",j_current,x[j_current],y[j_current],u[j_current],v[j_current],L[j_current].time,L[j_current].number_particle);
 			}
 			
-			//i_current,j_current‚ÆÕ“Ë‚·‚é—±q‚ª‚¢‚½ê‡‚Í‚»‚Ì—±q‚Ìevent‚Íinvalid‚É‚È‚Á‚Ä‚µ‚Ü‚¤
-			//‚»‚Ì‚æ‚¤‚È—±q‚Í“¯‚¶ƒ}ƒXƒN“à‚É‚µ‚©‘¶İ‚µ‚È‚¢‚Í‚¸‚È‚Ì‚Å‚»‚Ì’†‚Å’Tõ
+			//i_current,j_currentã¨è¡çªã™ã‚‹ç²’å­ãŒã„ãŸå ´åˆã¯ãã®ç²’å­ã®eventã¯invalidã«ãªã£ã¦ã—ã¾ã†
+			//ãã®ã‚ˆã†ãªç²’å­ã¯åŒã˜ãƒã‚¹ã‚¯å†…ã«ã—ã‹å­˜åœ¨ã—ãªã„ã¯ãšãªã®ã§ãã®ä¸­ã§æ¢ç´¢
 			cell_x = getcell_x(x[i_current],cell_length_x);
 			cell_y = getcell_y(y[i_current],cell_length_y);
 			
@@ -250,7 +250,7 @@ int main(int argc,char* argv[]){
 				}
 				initialize(particle_cells,nextof);
 				for(i=0;i<N;i++){
-					//ƒZƒ‹‚Ö‚Ì“o˜^
+					//ã‚»ãƒ«ã¸ã®ç™»éŒ²
 					cell_x = getcell_x(x[i],cell_length_x);
 					cell_y = getcell_y(y[i],cell_length_y);
 					
@@ -315,7 +315,7 @@ int main(int argc,char* argv[]){
 				}
 				initialize(particle_cells,nextof);
 				for(i=0;i<N;i++){
-					//ƒZƒ‹‚Ö‚Ì“o˜^
+					//ã‚»ãƒ«ã¸ã®ç™»éŒ²
 					cell_x = getcell_x(x[i],cell_length_x);
 					cell_y = getcell_y(y[i],cell_length_y);
 					
@@ -415,7 +415,7 @@ double Uniform(void){
 }
 
 
-int set(double x[N],double y[N],int i){//set‚É¬Œ÷‚µ‚Ä‚¢‚ê‚Î1,¸”s‚µ‚Ä‚¢‚ê‚Î0‚ğ•Ô‚·
+int set(double x[N],double y[N],int i){//setã«æˆåŠŸã—ã¦ã„ã‚Œã°1,å¤±æ•—ã—ã¦ã„ã‚Œã°0ã‚’è¿”ã™
 	int j,r=1;
 	double d;
 	
@@ -477,7 +477,7 @@ void CBT_update(Node *entry[n+1][2*p+2*q],double time_new,int i_new){
 	if(i_new < 2*p){
 		entry[n][i_new]->time = time_new;
 		entry_now = entry[n][i_new];
-	}else{//practice‚Í‚±‚±‚Åƒ~ƒX‚Á‚Ä‚¢‚½AC³‚·‚é‚±‚Æ
+	}else{//practiceã¯ã“ã“ã§ãƒŸã‚¹ã£ã¦ã„ãŸã€ä¿®æ­£ã™ã‚‹ã“ã¨
 		entry[n][2*i_new-2*p]->time = time_new;
 		entry[n][2*i_new-2*p+1]->time = time_new;
 		entry_now = entry[n][2*i_new-2*p];
@@ -504,7 +504,7 @@ void Predictions(double x[N],double y[N],double u[N],double v[N],struct event *L
 	double xj,yj,uj,vj;
 	
 	for(j=-4;j<0;j++){
-		t_temp = T_DWC(x[i],y[i],u[i],v[i],tau[i],j);//t = tau[]‚æ‚èok
+		t_temp = T_DWC(x[i],y[i],u[i],v[i],tau[i],j);//t = tau[]ã‚ˆã‚Šok
 		if((t_temp > t) && (t_temp < t_min)){
 			t_min = t_temp;
 			j_col = j;

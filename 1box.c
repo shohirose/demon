@@ -3,45 +3,45 @@
 #include <math.h>
 #include <time.h>
 
-#define N 300//—±q”
-#define n ((int)ceil(log2(N)))//Š®‘S•½t–Ø‚Ì[‚³
+#define N 300//ç²’å­æ•°
+#define n ((int)ceil(log2(N)))//å®Œå…¨å¹³è¡¡æœ¨ã®æ·±ã•
 #define q ((int)pow(2,n)-N)
 #define p ((N-q)/2)
 double a = 0.02;//radius of disk
-double e = 0.95,e_wall = 1.0;//‚»‚ê‚¼‚ê—±q“¯mA•Ç‚Æ‚Ì”½”­ŒW”
-double g = 1.0;//‹KŠi‰»‚³‚ê‚½d—Í‰Á‘¬“x
-double Xmin = -1.0,Xmax = 1.0;//¶‰E‚Ì•Ç‚ÌˆÊ’u
-double Ymin = 0.0,Ymax = 1.0;//’ê–Ê‚ÆƒZƒ‹‚ÌÅ‚“_‚ÌˆÊ’u
-double U = 0.149;//°–Ê‚ÌU“®‚·‚é‘¬“x
-double V0 = 1.0;//‰ŠúğŒ‚Å‚Ì‘¬“x•ª•z‚Ì•W€•Î·
-int N_cell_x = 32,N_cell_y = 12;//x,y•ûŒü‚ÌƒZƒ‹‚Ì•ªŠ„”
-double T = 20.0;//ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“I—¹
+double e = 0.95,e_wall = 1.0;//ãã‚Œãã‚Œç²’å­åŒå£«ã€å£ã¨ã®åç™ºä¿‚æ•°
+double g = 1.0;//è¦æ ¼åŒ–ã•ã‚ŒãŸé‡åŠ›åŠ é€Ÿåº¦
+double Xmin = -1.0,Xmax = 1.0;//å·¦å³ã®å£ã®ä½ç½®
+double Ymin = 0.0,Ymax = 1.0;//åº•é¢ã¨ã‚»ãƒ«ã®æœ€é«˜ç‚¹ã®ä½ç½®
+double U = 0.149;//åºŠé¢ã®æŒ¯å‹•ã™ã‚‹é€Ÿåº¦
+double V0 = 1.0;//åˆæœŸæ¡ä»¶ã§ã®é€Ÿåº¦åˆ†å¸ƒã®æ¨™æº–åå·®
+int N_cell_x = 32,N_cell_y = 12;//x,yæ–¹å‘ã®ã‚»ãƒ«ã®åˆ†å‰²æ•°
+double T = 20.0;//ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†æ™‚åˆ»
 double epsilon = 0.000001;
 
 
-struct NODE{//Š®‘S•½t–Ø‚Ìƒm[ƒh‚Ì\‘¢‘Ì
-	int number;//‘Î‰‚·‚é—±q”Ô†
-	double time;//‘Î‰‚·‚é—±q‚Ì—\‘ª‚³‚ê‚½Å’ZÕ“Ë
-	struct NODE *left;//ã‚Æ¶‰E‚ğ‚Â‚È‚®
+struct NODE{//å®Œå…¨å¹³è¡¡æœ¨ã®ãƒãƒ¼ãƒ‰ã®æ§‹é€ ä½“
+	int number;//å¯¾å¿œã™ã‚‹ç²’å­ç•ªå·
+	double time;//å¯¾å¿œã™ã‚‹ç²’å­ã®äºˆæ¸¬ã•ã‚ŒãŸæœ€çŸ­è¡çªæ™‚åˆ»
+	struct NODE *left;//ä¸Šã¨å·¦å³ã‚’ã¤ãªã
 	struct NODE *right;
 	struct NODE *parent;
 };
 
-struct EVENT{//‚ ‚é—±q‚ÌƒCƒxƒ“ƒg‚ÌÚ×(Õ“ËE‘Šè)‚ğ‹L˜^
+struct EVENT{//ã‚ã‚‹ç²’å­ã®ã‚¤ãƒ™ãƒ³ãƒˆã®è©³ç´°(è¡çªæ™‚åˆ»ãƒ»ç›¸æ‰‹)ã‚’è¨˜éŒ²
 	double time;
 	int number_particle;
-	int number_col;//¡‰ñ‚Íg‚í‚È‚¢
+	int number_col;//ä»Šå›ã¯ä½¿ã‚ãªã„
 };
 
-struct PARTICLE{//—±q‚ÉŠÖ‚·‚éî•ñ‚ğ‚Ü‚Æ‚ß‚é
-	double x,y,u,v;//ˆÊ’uE‘¬“x
-	double tau;//—±q‚ÌŒÅ—LŠÔ‚ğ‹L˜^CDelayed State Algorithm(DSA)‚É‚æ‚é‚‘¬‰»‚Ì‚½‚ß‚É•K—v
-	double next;//©•ª‚ÌŸ‚É“¯‚¶ƒZƒ‹‚É“ü‚Á‚½—±q‚Ì”Ô†
-	struct EVENT event;//Ÿ‚É—\’è‚³‚ê‚éƒCƒxƒ“ƒg
+struct PARTICLE{//ç²’å­ã«é–¢ã™ã‚‹æƒ…å ±ã‚’ã¾ã¨ã‚ã‚‹
+	double x,y,u,v;//ä½ç½®ãƒ»é€Ÿåº¦
+	double tau;//ç²’å­ã®å›ºæœ‰æ™‚é–“ã‚’è¨˜éŒ²ï¼ŒDelayed State Algorithm(DSA)ã«ã‚ˆã‚‹é«˜é€ŸåŒ–ã®ãŸã‚ã«å¿…è¦
+	double next;//è‡ªåˆ†ã®æ¬¡ã«åŒã˜ã‚»ãƒ«ã«å…¥ã£ãŸç²’å­ã®ç•ªå·
+	struct EVENT event;//æ¬¡ã«äºˆå®šã•ã‚Œã‚‹ã‚¤ãƒ™ãƒ³ãƒˆ
 };
 
 struct CELL{
-	int first;//ƒZƒ‹‚Ö‚Ì“o˜^‚ÉÅ‚à‘‚­“o˜^‚³‚ê‚½—±q
+	int first;//ã‚»ãƒ«ã¸ã®ç™»éŒ²æ™‚ã«æœ€ã‚‚æ—©ãç™»éŒ²ã•ã‚ŒãŸç²’å­
 	int last;
 };
 
@@ -56,7 +56,7 @@ double r_distance(struct PARTICLE particle1,struct PARTICLE particle2);
 double v_distance(struct PARTICLE particle1,struct PARTICLE particle2);
 double Uniform(void);
 double rand_normal( double mu, double sigma );
-int getcell_x(double x,double cell_length_x);//ell‚Ícell_length‚Ì‚±‚Æ
+int getcell_x(double x,double cell_length_x);//ellã¯cell_lengthã®ã“ã¨
 int getcell_y(double y,double cell_length_y);
 void Free_evolution(struct PARTICLE *particle,double t);
 void G1(struct PARTICLE *particle,int j);
@@ -71,32 +71,32 @@ double EEPGM(struct PARTICLE particle[N],struct CELL cell[N_cell_x][N_cell_y],st
 
 
 int main(void){
-	FILE *fp_position,*fp_height;//ƒtƒ@ƒCƒ‹‚Ì¶¬
+	FILE *fp_position,*fp_height;//ãƒ•ã‚¡ã‚¤ãƒ«ã®ç”Ÿæˆ
 	char name_position[256];
-	sprintf(name_position,"position(N=%d).txt",N);//ˆê’è‚²‚Æ‚É—±q‚ÌˆÊ’u‚ğ•Û‘¶
+	sprintf(name_position,"position(N=%d).txt",N);//ä¸€å®šæ™‚åˆ»ã”ã¨ã«ç²’å­ã®ä½ç½®ã‚’ä¿å­˜
 	if((fp_position = fopen(name_position,"w"))==NULL){
 		printf("file_check open error\n");
 	}
-	if((fp_height = fopen("height.txt","w"))==NULL){//—±q‚Ì‚‚³‚Ì•½‹Ï’l‚ğ‹L˜^
+	if((fp_height = fopen("height.txt","w"))==NULL){//ç²’å­ã®é«˜ã•ã®å¹³å‡å€¤ã‚’è¨˜éŒ²
 		printf("file open error\n");
 	}
-	int i_current,j_current;//Œ»İ’–Ú‚µ‚Ä‚¢‚é—±q‚ÌƒyƒA,j_current<0:•Ç,j_current>=0:—±q
-	double v_max = 0.0;//Å‘å‘¬“x‚ğ•Û‘¶AƒZƒ‹‚ÌXV‚Ì‚½‚ß‚É•K—v
+	int i_current,j_current;//ç¾åœ¨æ³¨ç›®ã—ã¦ã„ã‚‹ç²’å­ã®ãƒšã‚¢,j_current<0:å£,j_current>=0:ç²’å­
+	double v_max = 0.0;//æœ€å¤§é€Ÿåº¦ã‚’ä¿å­˜ã€ã‚»ãƒ«ã®æ›´æ–°ã®ãŸã‚ã«å¿…è¦
 	double cell_length_x = (Xmax-Xmin)/(double)N_cell_x,cell_length_y =(Ymax-Ymin)/(double)N_cell_y;
-	double t=0.0,dt=0.01,trec=0.0,dtrec = (double)T/200.0;//200–‡‚Ì‰æ‘œ‚©‚çgif‚ğ¶¬
-	double t_cell=0.0,t_cell_old=0.0;//ƒZƒ‹‚ÌXV
+	double t=0.0,dt=0.01,trec=0.0,dtrec = (double)T/200.0;//200æšã®ç”»åƒã‹ã‚‰gifã‚’ç”Ÿæˆ
+	double t_cell=0.0,t_cell_old=0.0;//ã‚»ãƒ«ã®æ›´æ–°æ™‚åˆ»
 	double height;
 	
 	//srand((unsigned) time(NULL));
 	struct PARTICLE particle[N];
 	struct CELL cell[N_cell_x][N_cell_y];
-	status_initialize(particle);//ˆÊ’u‚â‘¬“x‚Ì‰Šú‰»
+	status_initialize(particle);//ä½ç½®ã‚„é€Ÿåº¦ã®åˆæœŸåŒ–
 	v_max = Vmax(particle);
-	t_cell = (cell_length_y-2.0*a)/(2.0*v_max);//‚±‚ÌŠÔ‚Ü‚Å‚Éƒ}ƒXƒNŠO‚©‚ç‚ÌÕ“Ë‚Í‚ ‚è‚¦‚È‚¢
-	cell_register(particle,cell);//—±q‚ğƒZƒ‹‚É“o˜^‚·‚é,nextof‚Ì‰Šú‰»
+	t_cell = (cell_length_y-2.0*a)/(2.0*v_max);//ã“ã®æ™‚é–“ã¾ã§ã«ãƒã‚¹ã‚¯å¤–ã‹ã‚‰ã®è¡çªã¯ã‚ã‚Šãˆãªã„
+	cell_register(particle,cell);//ç²’å­ã‚’ã‚»ãƒ«ã«ç™»éŒ²ã™ã‚‹,nextofã®åˆæœŸåŒ–
 	
-	struct NODE *node[n+1][2*p+2*q];//Š®‘S•½t–Ø(‚ ‚é‚¢‚Íƒg[ƒiƒƒ“ƒg)‚ğ•\‚·\‘¢‘Ì
-	//node‚ÌÀ‘Ì‰»A‚à‚¤‚¿‚å‚Á‚Æ‚¨‚µ‚á‚ê‚É‚µ‚½‚¢
+	struct NODE *node[n+1][2*p+2*q];//å®Œå…¨å¹³è¡¡æœ¨(ã‚ã‚‹ã„ã¯ãƒˆãƒ¼ãƒŠãƒ¡ãƒ³ãƒˆ)ã‚’è¡¨ã™æ§‹é€ ä½“
+	//nodeã®å®Ÿä½“åŒ–ã€ã‚‚ã†ã¡ã‚‡ã£ã¨ãŠã—ã‚ƒã‚Œã«ã—ãŸã„
 	for(int i=0;i<=n;i++){
 		for(int j=0;j<2*p+2*q;j++){
 			node[i][j] = (struct NODE *)malloc(sizeof(struct NODE));
@@ -104,31 +104,31 @@ int main(void){
 	}
 	
 	for(int i=0;i<N;i++){
-		particle[i].event = Predictions(particle,cell,t,i);//‚»‚ê‚¼‚ê‚Ì—±q‚ÌŸ‚ÌƒCƒxƒ“ƒg‚ğ—\‘ª
+		particle[i].event = Predictions(particle,cell,t,i);//ãã‚Œãã‚Œã®ç²’å­ã®æ¬¡ã®ã‚¤ãƒ™ãƒ³ãƒˆã‚’äºˆæ¸¬
 	}
-	CBT_build(node,particle);//Complete Binary Tree‚ğ‘g‚İ—§‚Ä‚é
+	CBT_build(node,particle);//Complete Binary Treeã‚’çµ„ã¿ç«‹ã¦ã‚‹
 	printf("set up ok\n");
 	while(t <= T){
 		
-		//NEXT EVENT‚ÌŒŸõ
-		i_current = node[0][0]->number;//ŒˆŸ‚Ìƒm[ƒh‚ÍÅ’Z‚ÌŠÔ‚ÅÕ“Ë‚·‚é—±q‚ğ¦‚·
-		j_current = particle[i_current].event.number_particle;//i_current‚ÌÕ“Ë‘Šè(‚±‚ê‚Í•Ç‚Ì‰Â”\«‚à‚ ‚é)
-		t = NextEvent(particle,cell,node,i_current,j_current);//NEXT EVENT‚ğˆ—‚µt‚Æparticle,cell,node‚ğXV
-		t_cell = t_cell_update(particle[i_current],j_current,t_cell_old,&v_max);//t_cell‚Æv_max‚ÌXV
+		//NEXT EVENTã®æ¤œç´¢
+		i_current = node[0][0]->number;//æ±ºå‹ã®ãƒãƒ¼ãƒ‰ã¯æœ€çŸ­ã®æ™‚é–“ã§è¡çªã™ã‚‹ç²’å­ã‚’ç¤ºã™
+		j_current = particle[i_current].event.number_particle;//i_currentã®è¡çªç›¸æ‰‹(ã“ã‚Œã¯å£ã®å¯èƒ½æ€§ã‚‚ã‚ã‚‹)
+		t = NextEvent(particle,cell,node,i_current,j_current);//NEXT EVENTã‚’å‡¦ç†ã—tã¨particle,cell,nodeã‚’æ›´æ–°
+		t_cell = t_cell_update(particle[i_current],j_current,t_cell_old,&v_max);//t_cellã¨v_maxã®æ›´æ–°
 		
-		//i_current,j_current‚ÆÕ“Ë‚·‚é—±q‚ª‚¢‚½ê‡‚Í‚»‚Ì—±q‚Ìevent‚Íinvalid‚É‚È‚Á‚Ä‚µ‚Ü‚¤‚Ì‚ÅV‚µ‚­event‚ğì‚é
-		//‚»‚Ì‚æ‚¤‚È—±q‚Í“¯‚¶ƒ}ƒXƒN“à‚É‚µ‚©‘¶İ‚µ‚È‚¢‚Í‚¸‚È‚Ì‚Å‚»‚Ì’†‚Å’Tõ
-		MaskUpdate(particle,cell,node,i_current,t);//i_current‚Ìü‚è‚Ì—±q‚Åinvalid‚È‚à‚Ì‚ª‚ ‚ê‚ÎƒAƒbƒvƒf[ƒg
-		if(j_current >= 0){//j‚É‚Â‚¢‚Ä‚à“¯—l
+		//i_current,j_currentã¨è¡çªã™ã‚‹ç²’å­ãŒã„ãŸå ´åˆã¯ãã®ç²’å­ã®eventã¯invalidã«ãªã£ã¦ã—ã¾ã†ã®ã§æ–°ã—ãeventã‚’ä½œã‚‹
+		//ãã®ã‚ˆã†ãªç²’å­ã¯åŒã˜ãƒã‚¹ã‚¯å†…ã«ã—ã‹å­˜åœ¨ã—ãªã„ã¯ãšãªã®ã§ãã®ä¸­ã§æ¢ç´¢
+		MaskUpdate(particle,cell,node,i_current,t);//i_currentã®å‘¨ã‚Šã®ç²’å­ã§invalidãªã‚‚ã®ãŒã‚ã‚Œã°ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ
+		if(j_current >= 0){//jã«ã¤ã„ã¦ã‚‚åŒæ§˜
 			MaskUpdate(particle,cell,node,j_current,t);
 		}
 		
 		
-		//EEPGM ƒ}ƒXƒNŠO‚Ì—±q‚Æ‚àÕ“Ë‚·‚é‰Â”\«‚ª¶‚¶‚é‚Ì‚Å“o˜^‚µ’¼‚·
+		//EEPGM ãƒã‚¹ã‚¯å¤–ã®ç²’å­ã¨ã‚‚è¡çªã™ã‚‹å¯èƒ½æ€§ãŒç”Ÿã˜ã‚‹ã®ã§ç™»éŒ²ã—ç›´ã™
 		if(t >= t_cell){
 			t_cell_old = t;
 			t_cell = EEPGM(particle,cell,node,t,&v_max);
-			//°‚É—±q‚ª‚ß‚è‚ñ‚Å‚¢‚½‚ç‚±‚ÌƒGƒ‰[‚ª¶‚¶‚é
+			//åºŠã«ç²’å­ãŒã‚ã‚Šè¾¼ã‚“ã§ã„ãŸã‚‰ã“ã®ã‚¨ãƒ©ãƒ¼ãŒç”Ÿã˜ã‚‹
 			for(int i=0;i<N;i++){
 				if(particle[i].y < Ymin+a-epsilon){
 					printf("i=%d:error\n",i);
@@ -142,7 +142,7 @@ int main(void){
 			}
 			
 		}
-		//—±q‚ÌˆÊ’u‚Ìo—Í
+		//ç²’å­ã®ä½ç½®ã®å‡ºåŠ›
 		if((t > trec)&&(t < T)){
 			t_cell_old = t;
 			t_cell = EEPGM(particle,cell,node,t,&v_max);
@@ -202,7 +202,7 @@ struct EVENT Predictions(struct PARTICLE particle[N],struct CELL cell[N_cell_x][
 	}
 	L.time = t_min;
 	L.number_particle = j_col;
-	L.number_col = 0;//¡ŒãC³‚ª•K—v‚É‚È‚é‚©‚à‚µ‚ê‚È‚¢
+	L.number_col = 0;//ä»Šå¾Œä¿®æ­£ãŒå¿…è¦ã«ãªã‚‹ã‹ã‚‚ã—ã‚Œãªã„
 	return L;
 }
 void CBT_build(struct NODE *node[n+1][2*p+2*q],struct PARTICLE particle[N]){
@@ -309,7 +309,7 @@ void cell_register(struct PARTICLE particle[N],struct CELL cell[N_cell_x][N_cell
 }
 
 
-int set(struct PARTICLE particle[N],int i){//set‚É¬Œ÷‚µ‚Ä‚¢‚ê‚Î1,¸”s‚µ‚Ä‚¢‚ê‚Î0‚ğ•Ô‚·
+int set(struct PARTICLE particle[N],int i){//setã«æˆåŠŸã—ã¦ã„ã‚Œã°1,å¤±æ•—ã—ã¦ã„ã‚Œã°0ã‚’è¿”ã™
 	int j,r=1;
 	double d;
 	
@@ -360,7 +360,7 @@ int getcell_y(double y,double cell_length_y){
 		printf("error:y<0(%lf)\n",y);
 		return 0;
 	}else if(y>Ymax){
-		return N_cell_y-1;//Ymax‚æ‚è‚à‚‚¢ˆÊ’u‚Ì—±q‚Íˆê”Ô‚‚¢ƒZƒ‹‚É“o˜^
+		return N_cell_y-1;//Ymaxã‚ˆã‚Šã‚‚é«˜ã„ä½ç½®ã®ç²’å­ã¯ä¸€ç•ªé«˜ã„ã‚»ãƒ«ã«ç™»éŒ²
 	}else{
 		return (int)(y/cell_length_y);
 	}
@@ -372,7 +372,7 @@ void Free_evolution(struct PARTICLE *particle,double t){
 	particle->x += (particle->u)*t;
 	particle->y += (particle->v)*t-0.5*g*t*t;
 	particle->v += -g*t;
-	particle->tau += t;//‚±‚±‚Í‚¤‚Ü‚­‚¢‚Á‚Ä‚¢‚é‚©Šm”F‚ª•K—v
+	particle->tau += t;//ã“ã“ã¯ã†ã¾ãã„ã£ã¦ã„ã‚‹ã‹ç¢ºèªãŒå¿…è¦
 }
 
 void G1(struct PARTICLE *particle,int j){
@@ -380,7 +380,7 @@ void G1(struct PARTICLE *particle,int j){
 	if((j == -1) || (j == -2)){//collision with R or L wall
 		particle->u = -e_wall*particle->u;
 		if(j == -1){
-			particle->x = Xmax-a-epsilon;//‚±‚Ìepsilonˆ—‚Ígetcell_x‚Ì‚Æ‚«‚È‚Ç‚É•K—v‚É‚È‚é
+			particle->x = Xmax-a-epsilon;//ã“ã®epsilonå‡¦ç†ã¯getcell_xã®ã¨ããªã©ã«å¿…è¦ã«ãªã‚‹
 		}else{
 			particle->x = Xmin+a+epsilon;
 		}
@@ -449,17 +449,17 @@ double T_DWC(struct PARTICLE particle,double t,int j){
 }
 double NextEvent(struct PARTICLE particle[N],struct CELL cell[N_cell_x][N_cell_y],struct NODE *node[n+1][2*p+2*q],int i_current,int j_current){
 	double t = particle[i_current].event.time;
-	Free_evolution(&particle[i_current],t-particle[i_current].tau);//i_current‚ÌŠÔ”­“W
+	Free_evolution(&particle[i_current],t-particle[i_current].tau);//i_currentã®æ™‚é–“ç™ºå±•
 	if(j_current >= 0){//Disk Disk Collision
-		Free_evolution(&particle[j_current],t-particle[j_current].tau);//j_current‚ÌŠÔ”­“W
-		G2(&particle[i_current],&particle[j_current]);//—±q“¯m‚ÌÕ“Ëˆ—
+		Free_evolution(&particle[j_current],t-particle[j_current].tau);//j_currentã®æ™‚é–“ç™ºå±•
+		G2(&particle[i_current],&particle[j_current]);//ç²’å­åŒå£«ã®è¡çªå‡¦ç†
 	}
 	if(j_current < 0){//Disk Wall Collision
-		G1(&particle[i_current],j_current);//•Ç‚Æ‚ÌÕ“Ëˆ—
+		G1(&particle[i_current],j_current);//å£ã¨ã®è¡çªå‡¦ç†
 	}
-	particle[i_current].event = Predictions(particle,cell,t,i_current);//i_current‚ÌƒCƒxƒ“ƒgXV
-	CBT_update(node,particle[i_current].event.time,i_current);//i_current‚ÌnodeƒAƒbƒvƒf[ƒg
-	if(j_current >= 0){//j_current‚É‚Â‚¢‚Ä‚à“¯—l
+	particle[i_current].event = Predictions(particle,cell,t,i_current);//i_currentã®ã‚¤ãƒ™ãƒ³ãƒˆæ›´æ–°
+	CBT_update(node,particle[i_current].event.time,i_current);//i_currentã®nodeã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ
+	if(j_current >= 0){//j_currentã«ã¤ã„ã¦ã‚‚åŒæ§˜
 		particle[j_current].event = Predictions(particle,cell,t,j_current);
 		CBT_update(node,particle[j_current].event.time,j_current);
 	}
@@ -512,15 +512,15 @@ double EEPGM(struct PARTICLE particle[N],struct CELL cell[N_cell_x][N_cell_y],st
 	double cell_length_x = (Xmax-Xmin)/(double)N_cell_x,cell_length_y = (Ymax-Ymin)/(double)N_cell_y;
 	double dt_cell,t_cell;
 
-	for(int i=0;i<N;i++){//Œ»İ‚Ü‚ÅŠÔ”­“W
+	for(int i=0;i<N;i++){//ç¾åœ¨æ™‚åˆ»ã¾ã§æ™‚é–“ç™ºå±•
 		Free_evolution(&particle[i],t-particle[i].tau);
 	}
 
-	cell_register(particle,cell);//‘S—±q‚ğƒZƒ‹‚É“o˜^‚µ’¼‚·
-	for(int i=0;i<N;i++){//‘S—±q‚É‚Â‚¢‚Äevent‚ğŒvZ‚µ’¼‚·
+	cell_register(particle,cell);//å…¨ç²’å­ã‚’ã‚»ãƒ«ã«ç™»éŒ²ã—ç›´ã™
+	for(int i=0;i<N;i++){//å…¨ç²’å­ã«ã¤ã„ã¦eventã‚’è¨ˆç®—ã—ç›´ã™
 		particle[i].event = Predictions(particle,cell,t,i);
 	}
-	CBT_build(node,particle);//CBT‚àÅ‰‚©‚ç\¬
+	CBT_build(node,particle);//CBTã‚‚æœ€åˆã‹ã‚‰æ§‹æˆ
 	*v_max = Vmax(particle);
 	dt_cell = (cell_length_y-2.0*a)/(2.0*(*v_max));
 	t_cell = t+dt_cell;
