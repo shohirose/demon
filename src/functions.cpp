@@ -1,5 +1,5 @@
 #include "functions.hpp"
-#define _USE_MATH_DEFINES
+// #define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
 #include "constants.hpp"
@@ -192,4 +192,177 @@ struct Event Predictions(std::vector<Particle>& particles,
   L.number_particle = j_col;
   L.number_col = 0;  //今後修正が必要になるかもしれない
   return L;
+}
+
+void CBT_build(std::vector<std::vector<Node>>& nodes,
+               std::vector<Particle>& particles) {
+  // initialization for bottom nodes
+  for (int i = 0; i < 2 * p + 2 * q; i++) {
+    if (i < 2 * p) {
+      nodes[n][i].time = particles[i].event.time;
+      nodes[n][i].number = i;
+    } else {
+      nodes[n][i].time = particles[2 * p + (i - 2 * p) / 2].event.time;
+      nodes[n][i].number = 2 * p + (i - 2 * p) / 2;
+    }
+  }
+
+  // tournament
+  for (int n_index = n - 1; n_index >= 0; n_index--) {
+    for (int i = 0; i <= std::pow(2, n_index) - 1; i++) {
+      nodes[n_index][i].left = &nodes[n_index + 1][2 * i];
+      nodes[n_index + 1][2 * i].parent = &nodes[n_index][i];
+      nodes[n_index][i].right = &nodes[n_index + 1][2 * i + 1];
+      nodes[n_index + 1][2 * i + 1].parent = &nodes[n_index][i];
+      if (nodes[n_index + 1][2 * i].time <=
+          nodes[n_index + 1][2 * i + 1].time) {
+        nodes[n_index][i].time = nodes[n_index + 1][2 * i].time;
+        nodes[n_index][i].number = nodes[n_index + 1][2 * i].number;
+      } else {
+        nodes[n_index][i].time = nodes[n_index + 1][2 * i + 1].time;
+        nodes[n_index][i].number = nodes[n_index + 1][2 * i + 1].number;
+      }
+    }
+  }
+}
+
+void CBT_update(std::vector<std::vector<Node>>& entry, double time_new,
+                int i_new) {
+  Node* entry_now;
+  if (i_new < 2 * p) {
+    entry[n][i_new].time = time_new;
+    entry_now = &entry[n][i_new];
+  } else {
+    entry[n][2 * i_new - 2 * p].time = time_new;
+    entry[n][2 * i_new - 2 * p + 1].time = time_new;
+    entry_now = &entry[n][2 * i_new - 2 * p];
+  }
+
+  while (entry_now->parent != nullptr) {
+    entry_now = entry_now->parent;
+    if (entry_now->left->time < entry_now->right->time) {
+      entry_now->time = entry_now->left->time;
+      entry_now->number = entry_now->left->number;
+    } else {
+      entry_now->time = entry_now->right->time;
+      entry_now->number = entry_now->right->number;
+    }
+  }
+}
+
+void G1(Particle& particle, int j) {
+  if ((j == -1) || (j == -2)) {  // collision with R or L wall
+    particle.u = -e_wall * particle.u;
+    if (j == -1) {
+      particle.x = Xmax - a - epsilon;
+      //このepsilon処理はgetcell_xのときなどに必要になる
+    } else {
+      particle.x = Xmin + a + epsilon;
+    }
+  } else if (j == -3) {  // collision with Bottom wall
+    particle.v = (1 + e_wall) * U - e_wall * particle.v;
+    particle.y = Ymin + a + epsilon;
+  }
+}
+
+void G2(Particle& p1, Particle& p2) {
+  const auto d = r_distance(p1, p2);
+  const auto u1 = p1.u;
+  const auto v1 = p1.v;
+  const auto u2 = p2.u;
+  const auto v2 = p2.v;
+  const auto cx = (p1.x - p2.x) / d;
+  const auto cy = (p1.y - p2.y) / d;
+  p1.u = 0.5 * (1 + e) * ((u2 - u1) * cx + (v2 - v1) * cy) * cx + u1;
+  p1.v = 0.5 * (1 + e) * ((u2 - u1) * cx + (v2 - v1) * cy) * cy + v1;
+  p2.u = 0.5 * (1 + e) * ((u1 - u2) * cx + (v1 - v2) * cy) * cx + u2;
+  p2.v = 0.5 * (1 + e) * ((u1 - u2) * cx + (v1 - v2) * cy) * cy + v2;
+}
+
+double NextEvent(std::vector<Particle>& particles,
+                 std::vector<std::vector<Cell>>& cells,
+                 std::vector<std::vector<Node>>& nodes, int i_current,
+                 int j_current) {
+  double t = particles[i_current].event.time;
+  Free_evolution(particles[i_current],
+                 t - particles[i_current].tau);  // i_currentの時間発展
+  if (j_current >= 0) {                          // Disk Disk Collision
+    Free_evolution(particles[j_current],
+                   t - particles[j_current].tau);    // j_currentの時間発展
+    G2(particles[i_current], particles[j_current]);  //粒子同士の衝突処理
+  }
+  if (j_current < 0) {                    // Disk Wall Collision
+    G1(particles[i_current], j_current);  //壁との衝突処理
+  }
+  particles[i_current].event =
+      Predictions(particles, cells, t, i_current);  // i_currentのイベント更新
+  CBT_update(nodes, particles[i_current].event.time,
+             i_current);  // i_currentのnodeアップデート
+  if (j_current >= 0) {   // j_currentについても同様
+    particles[j_current].event = Predictions(particles, cells, t, j_current);
+    CBT_update(nodes, particles[j_current].event.time, j_current);
+  }
+  return t;
+}
+
+double t_cell_update(const Particle& particle, int j_current, double t_cell_old,
+                     double& v_max) {
+  double t_cell, dt_cell;
+  // double cell_length_x = (Xmax - Xmin) / (double)N_cell_x;
+  double cell_length_y = (Ymax - Ymin) / (double)N_cell_y;
+  if (j_current == -3) {
+    const auto v = particle.velocity();
+    if (v_max < v) v_max = v;
+  }
+  dt_cell = (cell_length_y - 2.0 * a) / (2.0 * (v_max));
+  t_cell = t_cell_old + dt_cell;
+  return t_cell;
+}
+
+void MaskUpdate(std::vector<Particle>& particles,
+                std::vector<std::vector<Cell>>& cells,
+                std::vector<std::vector<Node>>& nodes, int i_current,
+                double t) {
+  double cell_length_x = (Xmax - Xmin) / (double)N_cell_x,
+         cell_length_y = (Ymax - Ymin) / (double)N_cell_y;
+  int cell_x = getcell_x(particles[i_current].x, cell_length_x),
+      cell_y = getcell_y(particles[i_current].y, cell_length_y), j;
+  for (int c1 = -1; c1 <= 1; c1++) {
+    for (int c2 = -1; c2 <= 1; c2++) {
+      if ((((cell_x + c1 >= 0) && (cell_x + c1 < N_cell_x)) &&
+           (cell_y + c2 >= 0)) &&
+          (cell_y + c2 < N_cell_y)) {
+        j = cells[cell_x + c1][cell_y + c2].first;
+        while (j >= 0) {
+          if (particles[j].event.number_particle == i_current) {
+            particles[j].event = Predictions(particles, cells, t, j);
+            CBT_update(nodes, particles[j].event.time, j);
+          }
+          j = particles[j].next;
+        }
+      }
+    }
+  }
+}
+
+double EEPGM(std::vector<Particle>& particles,
+             std::vector<std::vector<Cell>>& cells,
+             std::vector<std::vector<Node>>& nodes, double t, double& v_max) {
+  // double cell_length_x = (Xmax - Xmin) / (double)N_cell_x;
+  double cell_length_y = (Ymax - Ymin) / (double)N_cell_y;
+  double dt_cell, t_cell;
+
+  for (int i = 0; i < N; i++) {  //現在時刻まで時間発展
+    Free_evolution(particles[i], t - particles[i].tau);
+  }
+
+  cell_register(particles, cells);  //全粒子をセルに登録し直す
+  for (int i = 0; i < N; i++) {  //全粒子についてeventを計算し直す
+    particles[i].event = Predictions(particles, cells, t, i);
+  }
+  CBT_build(nodes, particles);  // CBTも最初から構成
+  v_max = Vmax(particles);
+  dt_cell = (cell_length_y - 2.0 * a) / (2.0 * v_max);
+  t_cell = t + dt_cell;
+  return t_cell;
 }

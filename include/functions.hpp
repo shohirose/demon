@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "cell.hpp"
+#include "node.hpp"
 #include "particle.hpp"
 
 /// @brief Returns uniform distribution
@@ -33,5 +34,30 @@ double T_DWC(const Particle& particle, double t, int j);
 struct Event Predictions(std::vector<Particle>& particles,
                          std::vector<std::vector<Cell>>& cells, double t,
                          int i);
+
+void CBT_build(std::vector<std::vector<Node>>& nodes,
+               std::vector<Particle>& particles);
+
+void CBT_update(std::vector<std::vector<Node>>& nodes, double time_new,
+                int i_new);
+
+void G1(Particle& particle, int j);
+void G2(Particle& p1, Particle& p2);
+
+double NextEvent(std::vector<Particle>& particles,
+                 std::vector<std::vector<Cell>>& cells,
+                 std::vector<std::vector<Node>>& nodes, int i_current,
+                 int j_current);
+
+double t_cell_update(const Particle& particle, int j_current, double t_cell_old,
+                     double& v_max);
+
+void MaskUpdate(std::vector<Particle>& particles,
+                std::vector<std::vector<Cell>>& cells,
+                std::vector<std::vector<Node>>& nodes, int i_current, double t);
+
+double EEPGM(std::vector<Particle>& particles,
+             std::vector<std::vector<Cell>>& cells,
+             std::vector<std::vector<Node>>& nodes, double t, double& v_max);
 
 #endif  // FUNCTIONS_HPP
