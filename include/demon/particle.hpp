@@ -1,8 +1,8 @@
-#ifndef PARTICLE_HPP
-#define PARTICLE_HPP
+#ifndef DEMON_PARTICLE_HPP
+#define DEMON_PARTICLE_HPP
 
 #include <cmath>
-#include "event.hpp"
+#include "demon/event.hpp"
 
 struct Particle {  //粒子に関する情報をまとめる
   double x;        // x position
@@ -29,4 +29,4 @@ double v_distance(const Particle& p1, const Particle& p2);
 
 void Free_evolution(Particle& particle, double t);
 
-#endif  // PARTICLE_HPP
+#endif  // DEMON_PARTICLE_HPP

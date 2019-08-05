@@ -1,10 +1,10 @@
-#ifndef FUNCTIONS_HPP
-#define FUNCTIONS_HPP
+#ifndef DEMON_FUNCTIONS_HPP
+#define DEMON_FUNCTIONS_HPP
 
 #include <vector>
-#include "cell.hpp"
-#include "node.hpp"
-#include "particle.hpp"
+#include "demon/cell.hpp"
+#include "demon/node.hpp"
+#include "demon/particle.hpp"
 
 /// @brief Returns uniform distribution
 double Uniform();

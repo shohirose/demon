@@ -1,7 +1,7 @@
 #include <iostream>
-#include "constants.hpp"
-#include "functions.hpp"
-#include "node.hpp"
+#include "demon/constants.hpp"
+#include "demon/functions.hpp"
+#include "demon/node.hpp"
 
 int main(void) {
   FILE *fp_position, *fp_height;  //ファイルの生成

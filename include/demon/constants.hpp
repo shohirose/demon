@@ -1,5 +1,5 @@
-#ifndef CONSTANTS_HPP
-#define CONSTANTS_HPP
+#ifndef DEMON_CONSTANTS_HPP
+#define DEMON_CONSTANTS_HPP
 
 constexpr int N = 300;         //粒子数
 constexpr int n = 9;           //完全平衡木の深さ, = ceil(log2(N))
@@ -21,4 +21,4 @@ constexpr int N_cell_y = 12;    // y方向のセルの分割数
 constexpr double T = 20.0;      //シミュレーション終了時刻
 constexpr double epsilon = 0.000001;
 
-#endif  // CONSTANTS_HPP
+#endif  // DEMON_CONSTANTS_HPP

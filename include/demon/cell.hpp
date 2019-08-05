@@ -1,9 +1,9 @@
-#ifndef CELL_HPP
-#define CELL_HPP
+#ifndef DEMON_CELL_HPP
+#define DEMON_CELL_HPP
 
 struct Cell {
   int first;  //セルへの登録時に最も早く登録された粒子
   int last;
 };
 
-#endif  // CELL_HPP
+#endif  // DEMON_CELL_HPP

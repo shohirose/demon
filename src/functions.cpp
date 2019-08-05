@@ -1,8 +1,7 @@
-#include "functions.hpp"
-// #define _USE_MATH_DEFINES
+#include "demon/functions.hpp"
 #include <cmath>
 #include <iostream>
-#include "constants.hpp"
+#include "demon/constants.hpp"
 
 double Uniform() { return ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0); }
 

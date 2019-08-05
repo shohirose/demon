@@ -1,5 +1,5 @@
-#ifndef NODE_HPP
-#define NODE_HPP
+#ifndef DEMON_NODE_HPP
+#define DEMON_NODE_HPP
 
 struct Node {   //完全平衡木のノードの構造体
   int number;   //対応する粒子番号
@@ -9,4 +9,4 @@ struct Node {   //完全平衡木のノードの構造体
   Node *parent;
 };
 
-#endif  // NODE_HPP
+#endif  // DEMON_NODE_HPP

@@ -1,6 +1,6 @@
-#include "particle.hpp"
+#include "demon/particle.hpp"
 #include <cmath>
-#include "constants.hpp"
+#include "demon/constants.hpp"
 
 double r_distance(const Particle& p1, const Particle& p2) {
   const auto dx = p1.x - p2.x;
