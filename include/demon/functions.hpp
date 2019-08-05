@@ -6,14 +6,6 @@
 #include "demon/node.hpp"
 #include "demon/particle.hpp"
 
-/// @brief Returns uniform distribution
-double Uniform();
-
-/// @brief Returns normal distribution
-/// @param[in] mu Mean
-/// @param[in] sigma Standard deviation
-double rand_normal(double mu, double sigma);
-
 int set(std::vector<Particle>& particles, int i);
 
 void status_initialize(std::vector<Particle>& particles);

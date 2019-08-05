@@ -2,14 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include "demon/constants.hpp"
-
-double Uniform() { return ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0); }
-
-double rand_normal(double mu, double sigma) {
-  double z =
-      std::sqrt(-2.0 * std::log(Uniform())) * std::sin(2.0 * M_PI * Uniform());
-  return mu + sigma * z;
-}
+#include "demon/random.hpp"
 
 int set(std::vector<Particle>& particles,
         int i) {  // setに成功していれば1,失敗していれば0を返す
@@ -30,18 +23,22 @@ int set(std::vector<Particle>& particles,
 }
 
 void status_initialize(std::vector<Particle>& particles) {
+  std::uniform_real_distribution<> udist(0.0, 1.0);
+  std::normal_distribution<> ndist(0.0, V0);
+  auto& rd = random_engine();
+
   for (size_t i = 0; i < particles.size(); i++) {
-    const auto prob = Uniform();
-    particles[i].x = (Xmin + a) * prob + (Xmax - a) * (1 - prob);
-    particles[i].y = (Ymin + a) * prob + (0.5 * Ymax - a) * (1 - prob);
+    const auto x = udist(rd);
+    particles[i].x = (Xmin + a) * x + (Xmax - a) * (1 - x);
+    particles[i].y = (Ymin + a) * x + (0.5 * Ymax - a) * (1 - x);
     while (set(particles, i) == 0) {
-      const auto prob2 = Uniform();
-      particles[i].x = (Xmin + a) * prob2 + (Xmax - a) * (1 - prob2);
-      const auto prob3 = Uniform();
-      particles[i].y = (Ymin + a) * prob3 + (Ymax - a) * (1 - prob3);
+      const auto x2 = udist(rd);
+      particles[i].x = (Xmin + a) * x2 + (Xmax - a) * (1 - x2);
+      const auto x3 = udist(rd);
+      particles[i].y = (Ymin + a) * x3 + (Ymax - a) * (1 - x3);
     }
-    particles[i].u = rand_normal(0.0, V0);
-    particles[i].v = rand_normal(0.0, V0);
+    particles[i].u = ndist(rd);
+    particles[i].v = ndist(rd);
     particles[i].next = -1;
     particles[i].tau = 0.0;
     particles[i].event.number_col = 0;

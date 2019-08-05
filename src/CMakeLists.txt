@@ -2,6 +2,7 @@ add_executable(1box
   main.cpp
   functions.cpp
   particle.cpp
+  random.cpp
   )
 target_compile_options(1box
   PUBLIC
