@@ -3,8 +3,8 @@
 
 constexpr int NP = 300;        //粒子数
 constexpr int BTD = 9;         //完全平衡木の深さ, = ceil(log2(NP))
-constexpr auto Q = 512 - 300;  // = pow(2,D) - NP
-constexpr auto P = ((NP - Q) / 2);
+constexpr auto Q = 512 - 300;  // = pow(2,BTD) - NP
+constexpr auto P = (NP - Q) / 2;
 
 constexpr double RDISK = 0.02;   // radius of disk
 constexpr double PREST = 0.95;   //粒子同士の反発係数
