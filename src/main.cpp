@@ -7,7 +7,7 @@ int main(void) {
   FILE *fp_position, *fp_height;  //ファイルの生成
   char name_position[256];
   sprintf(name_position, "position(N=%d).txt",
-          N);  //一定時刻ごとに粒子の位置を保存
+          NP);  //一定時刻ごとに粒子の位置を保存
   if ((fp_position = fopen(name_position, "w")) == NULL) {
     printf("file_check open error\n");
   }
@@ -19,32 +19,32 @@ int main(void) {
   int j_current;  //現在注目している粒子のペア,j_current<0:壁,j_current>=0:粒子
   double v_max = 0.0;  //最大速度を保存、セルの更新のために必要
   // double cell_length_x = (Xmax - Xmin) / (double)N_cell_x;
-  double cell_length_y = (Ymax - Ymin) / (double)N_cell_y;
+  double cell_length_y = (YMAX - YMIN) / (double)NCELLY;
   double t = 0.0;
   // double dt = 0.01;
   double trec = 0.0;
-  double dtrec = (double)T / 200.0;  // 200枚の画像からgifを生成
+  double dtrec = (double)TEND / 200.0;  // 200枚の画像からgifを生成
   double t_cell = 0.;
   double t_cell_old = 0.0;  //セルの更新時刻
   double height;
 
-  std::vector<Particle> particles(N);
+  std::vector<Particle> particles(NP);
 
-  std::vector<std::vector<Cell>> cells(N_cell_x);
-  for (auto &&ci : cells) ci.resize(N_cell_y);
+  std::vector<std::vector<Cell>> cells(NCELLX);
+  for (auto &&ci : cells) ci.resize(NCELLY);
 
   status_initialize(particles);  //位置や速度の初期化
 
   v_max = Vmax(particles);
-  t_cell = (cell_length_y - 2.0 * a) /
+  t_cell = (cell_length_y - 2.0 * RDISK) /
            (2.0 * v_max);  //この時間までにマスク外からの衝突はありえない
   cell_register(particles, cells);  //粒子をセルに登録する,nextofの初期化
 
-  std::vector<std::vector<Node>> nodes(n + 1);
-  for (auto &&ni : nodes) ni.resize(2 * p + 2 * q);
+  std::vector<std::vector<Node>> nodes(BTD + 1);
+  for (auto &&ni : nodes) ni.resize(2 * P + 2 * Q);
   //完全平衡木(あるいはトーナメント)を表す構造体
 
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < particles.size(); i++) {
     particles[i].event = Predictions(particles, cells, t,
                                      i);  //それぞれの粒子の次のイベントを予測
   }
@@ -52,7 +52,7 @@ int main(void) {
   CBT_build(nodes, particles);  // Complete Binary Treeを組み立てる
   printf("set up ok\n");
 
-  while (t <= T) {
+  while (t <= TEND) {
     // NEXT EVENTの検索
     i_current =
         nodes[0][0].number;  //決勝のノードは最短の時間で衝突する粒子を示す
@@ -78,9 +78,9 @@ int main(void) {
       t_cell_old = t;
       t_cell = EEPGM(particles, cells, nodes, t, v_max);
       //床に粒子がめり込んでいたらこのエラーが生じる
-      for (int i = 0; i < N; i++) {
-        if (particles[i].y < Ymin + a - epsilon) {
-          printf("i=%d:error\n", i);
+      for (size_t i = 0; i < particles.size(); i++) {
+        if (particles[i].y < YMIN + RDISK - EPS) {
+          printf("i=%u:error\n", i);
           printf("%lf %lf %lf %lf\n", particles[i].x, particles[i].y,
                  particles[i].u, particles[i].v);
           printf("%lf %d %d\n", particles[i].event.time,
@@ -94,14 +94,14 @@ int main(void) {
       }
     }
     //粒子の位置の出力
-    if ((t > trec) && (t < T)) {
+    if ((t > trec) && (t < TEND)) {
       t_cell_old = t;
       t_cell = EEPGM(particles, cells, nodes, t, v_max);
       printf("t = %lf, v_max = %lf\n", t, v_max);
       height = 0.0;
-      for (int i = 0; i < N; i++) {
+      for (size_t i = 0; i < particles.size(); i++) {
         fprintf(fp_position, "%lf %lf\n", particles[i].x, particles[i].y);
-        height += particles[i].y / (double)N;
+        height += particles[i].y / (double)particles.size();
       }
       fprintf(fp_position, "\n\n");
       fprintf(fp_height, "%lf %lf\n", t, height);

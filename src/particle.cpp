@@ -16,7 +16,7 @@ double v_distance(const Particle& p1, const Particle& p2) {
 
 void Free_evolution(Particle& p, double t) {
   p.x += (p.u) * t;
-  p.y += (p.v) * t - 0.5 * g * t * t;
-  p.v += -g * t;
+  p.y += (p.v) * t - 0.5 * GRAVITY * t * t;
+  p.v += -GRAVITY * t;
   p.tau += t;  //ここはうまくいっているか確認が必要
 }
