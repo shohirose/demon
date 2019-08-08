@@ -16,6 +16,6 @@ std::mt19937 create_random_device() {
 }
 
 std::mt19937& random_engine() {
-  static thread_local std::mt19937 engine = create_random_device();
+  static thread_local auto engine = create_random_device();
   return engine;
 }
