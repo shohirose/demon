@@ -23,19 +23,17 @@ int set(std::vector<Particle>& particles,
 }
 
 void status_initialize(std::vector<Particle>& particles) {
-  std::uniform_real_distribution<> udist(0.0, 1.0);
+  std::uniform_real_distribution<> udistx(XMIN + RDISK, XMAX - RDISK);
+  std::uniform_real_distribution<> udisty(YMIN + RDISK, 0.5 * YMAX - RDISK);
   std::normal_distribution<> ndist(0.0, V0);
   auto& rd = random_engine();
 
   for (size_t i = 0; i < particles.size(); i++) {
-    const auto x = udist(rd);
-    particles[i].x = (XMIN + RDISK) * x + (XMAX - RDISK) * (1 - x);
-    particles[i].y = (YMIN + RDISK) * x + (0.5 * YMAX - RDISK) * (1 - x);
+    particles[i].x = udistx(rd);
+    particles[i].y = udisty(rd);
     while (set(particles, i) == 0) {
-      const auto x2 = udist(rd);
-      particles[i].x = (XMIN + RDISK) * x2 + (XMAX - RDISK) * (1 - x2);
-      const auto x3 = udist(rd);
-      particles[i].y = (YMIN + RDISK) * x3 + (YMAX - RDISK) * (1 - x3);
+      particles[i].x = udistx(rd);
+      particles[i].y = udisty(rd);
     }
     particles[i].u = ndist(rd);
     particles[i].v = ndist(rd);
@@ -110,9 +108,8 @@ double T_DDC(const Particle& p1, const Particle& p2, double t) {
   r_relative = r_distance(p1, p2);
   v_relative = v_distance(p1, p2);
   b = (x1 - x2) * (u1 - u2) + (y1 - y2) * (v1 - v2);
-  hoge =
-      b * b -
-      v_relative * v_relative * (r_relative * r_relative - 4.0 * RDISK * RDISK);
+  hoge = b * b - v_relative * v_relative *
+                     (r_relative * r_relative - 4.0 * RDISK * RDISK);
   if (hoge > 0) {
     tau += -(b + sqrt(hoge)) / (v_relative * v_relative);
   } else {
