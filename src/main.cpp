@@ -51,7 +51,8 @@ int main(void) {
   }
 
   CBT_build(nodes, particles);  // Complete Binary Treeを組み立てる
-  printf("set up ok\n");
+
+  std::cout << "set up ok" << std::endl;
 
   while (t <= TEND) {
     // NEXT EVENTの検索
