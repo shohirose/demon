@@ -6,20 +6,20 @@ add_executable(1box
   )
 target_compile_options(1box
   PUBLIC
-  -Wall
-  -Wextra
-  -Wpedantic
+    -Wall
+    -Wextra
+    -Wpedantic
   )
 target_include_directories(1box
   PUBLIC
-  ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include
   )
 target_compile_features(1box
   PUBLIC
-  cxx_std_14
+    cxx_std_14
   )
 target_compile_definitions(1box
   PUBLIC
-  $<$<PLATFORM_ID:Windows>:_USE_MATH_DEFINES>
+    $<$<PLATFORM_ID:Windows>:_USE_MATH_DEFINES>
   )
 
