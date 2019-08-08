@@ -1,20 +1,21 @@
+#include <fstream>
 #include <iostream>
+#include <string>
 #include "demon/constants.hpp"
 #include "demon/functions.hpp"
 #include "demon/node.hpp"
 
 int main(void) {
-  FILE *fp_position, *fp_height;  //ファイルの生成
-  char name_position[256];
-  sprintf(name_position, "position(N=%d).txt",
-          NP);  //一定時刻ごとに粒子の位置を保存
-  if ((fp_position = fopen(name_position, "w")) == NULL) {
-    printf("file_check open error\n");
+  // File to write the position of particles
+  std::ofstream fp;
+  {
+    std::string filename = "position(N=" + std::to_string(NP) + ").txt";
+    fp.open(filename);
   }
-  if ((fp_height = fopen("height.txt", "w")) ==
-      NULL) {  //粒子の高さの平均値を記録
-    printf("file open error\n");
-  }
+
+  // File to write the average height of particles
+  std::ofstream fh("height.txt");
+
   int i_current;
   int j_current;  //現在注目している粒子のペア,j_current<0:壁,j_current>=0:粒子
   double v_max = 0.0;  //最大速度を保存、セルの更新のために必要
@@ -79,16 +80,16 @@ int main(void) {
       t_cell = EEPGM(particles, cells, nodes, t, v_max);
       //床に粒子がめり込んでいたらこのエラーが生じる
       for (size_t i = 0; i < particles.size(); i++) {
-        if (particles[i].y < YMIN + RDISK - EPS) {
-          printf("i=%u:error\n", i);
-          printf("%lf %lf %lf %lf\n", particles[i].x, particles[i].y,
-                 particles[i].u, particles[i].v);
-          printf("%lf %d %d\n", particles[i].event.time,
-                 particles[i].event.number_particle,
-                 particles[i].event.number_col);
-          G1(particles[i], -3);
-          particles[i].event = Predictions(particles, cells, t, i);
-          CBT_update(nodes, particles[i].event.time, i);
+        auto &p = particles[i];
+        if (p.y < YMIN + RDISK - EPS) {
+          std::cout << "i=" << i << ":error\n"
+                    << p.x << ' ' << p.y << ' ' << p.u << ' ' << p.v << '\n'
+                    << p.event.time << ' ' << p.event.number_particle << ' '
+                    << p.event.number_col << std::endl;
+
+          G1(p, -3);
+          p.event = Predictions(particles, cells, t, i);
+          CBT_update(nodes, p.event.time, i);
           MaskUpdate(particles, cells, nodes, i, t);
         }
       }
@@ -99,17 +100,15 @@ int main(void) {
       t_cell = EEPGM(particles, cells, nodes, t, v_max);
       printf("t = %lf, v_max = %lf\n", t, v_max);
       height = 0.0;
-      for (size_t i = 0; i < particles.size(); i++) {
-        fprintf(fp_position, "%lf %lf\n", particles[i].x, particles[i].y);
-        height += particles[i].y / (double)particles.size();
+      for (auto &&p : particles) {
+        fp << p.x << ' ' << p.y << '\n';
+        height += p.y / (double)particles.size();
       }
-      fprintf(fp_position, "\n\n");
-      fprintf(fp_height, "%lf %lf\n", t, height);
+      fp << '\n' << std::endl;
+
+      fh << t << ' ' << height << std::endl;
+
       trec += dtrec;
     }
   }
-
-  fclose(fp_position);
-  fclose(fp_height);
-  return 0;
 }
